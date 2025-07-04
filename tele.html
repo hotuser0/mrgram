@@ -3,30 +3,363 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="style.css">
-    <script src="script.js"></script>
-    <title>TELE BIRR</title>
+    <title>TELE BIRR Payment</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Montserrat:wght@700&display=swap');
+        
+        :root {
+            --primary: #6a11cb;
+            --secondary: #2575fc;
+            --accent: #ff4e50;
+            --text: #ffffff;
+        }
+        
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Poppins', Arial, sans-serif;
+            background: url('https://i.gifer.com/7K5I.gif') center center fixed;
+            background-size: cover;
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            overflow-x: hidden;
+        }
+        
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(106, 17, 203, 0.85) 0%, rgba(37, 117, 252, 0.9) 100%);
+            z-index: -1;
+        }
+        
+        .container {
+            background-color: rgba(0, 0, 0, 0.65);
+            padding: 30px;
+            border-radius: 20px;
+            max-width: 600px;
+            text-align: center;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            margin: 20px;
+            width: 90%;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.3s ease;
+        }
+        
+        .container:hover {
+            transform: translateY(-5px);
+        }
+        
+        .container::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(
+                to bottom right,
+                rgba(255, 255, 255, 0) 0%,
+                rgba(255, 255, 255, 0.1) 50%,
+                rgba(255, 255, 255, 0) 100%
+            );
+            transform: rotate(30deg);
+            animation: shine 3s infinite;
+        }
+        
+        @keyframes shine {
+            0% { transform: translateX(-100%) rotate(30deg); }
+            100% { transform: translateX(100%) rotate(30deg); }
+        }
+        
+        h1 {
+            color: #ffcc00;
+            font-size: 2em;
+            margin-bottom: 25px;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+            font-family: 'Montserrat', sans-serif;
+            position: relative;
+            display: inline-block;
+        }
+        
+        h1::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 3px;
+            background: linear-gradient(90deg, var(--accent), var(--secondary));
+            border-radius: 3px;
+        }
+        
+        h3 {
+            color: #ffcc00;
+            font-size: 1.5em;
+            margin-bottom: 20px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        p {
+            font-size: 1.2em;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+        
+        .tele-number {
+            background: linear-gradient(135deg, rgba(255, 78, 80, 0.3), rgba(106, 17, 203, 0.3));
+            padding: 20px;
+            border-radius: 12px;
+            font-size: 1.8em;
+            font-weight: bold;
+            margin: 25px 0;
+            border: 2px solid rgba(255, 204, 0, 0.5);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .tele-number::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                90deg,
+                rgba(255, 255, 255, 0) 0%,
+                rgba(255, 255, 255, 0.2) 50%,
+                rgba(255, 255, 255, 0) 100%
+            );
+            transform: translateX(-100%);
+            animation: shimmer 2s infinite;
+        }
+        
+        @keyframes shimmer {
+            100% { transform: translateX(100%); }
+        }
+        
+        .account-name {
+            font-size: 0.8em;
+            color: #ffcc00;
+            margin-top: 10px;
+            display: block;
+            opacity: 0.9;
+        }
+        
+        .payment-amount {
+            color: #ffcc00;
+            font-size: 1.8em;
+            font-weight: bold;
+            margin: 25px 0;
+            background: linear-gradient(135deg, rgba(106, 17, 203, 0.5), rgba(37, 117, 252, 0.5));
+            padding: 15px;
+            border-radius: 10px;
+            display: inline-block;
+            border: 1px solid rgba(255, 204, 0, 0.3);
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            margin-top: 30px;
+        }
+        
+        input[type="text"], input[type="file"] {
+            padding: 15px 25px;
+            border-radius: 30px;
+            border: none;
+            width: 100%;
+            font-size: 1.1em;
+            background-color: rgba(255, 255, 255, 0.9);
+            box-sizing: border-box;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        input[type="text"]:focus, input[type="file"]:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(255, 204, 0, 0.5);
+            transform: scale(1.02);
+        }
+        
+        input[type="file"] {
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 18px;
+            text-align: center;
+            border: 2px dashed rgba(106, 17, 203, 0.5);
+        }
+        
+        button {
+            background: linear-gradient(135deg, var(--accent), var(--primary));
+            color: white;
+            border: none;
+            padding: 18px 35px;
+            border-radius: 30px;
+            font-size: 1.2em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+            font-weight: bold;
+            margin-top: 15px;
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+        }
+        
+        button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            opacity: 0;
+            z-index: -1;
+            transition: opacity 0.3s ease;
+        }
+        
+        button:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4);
+        }
+        
+        button:hover::before {
+            opacity: 1;
+        }
+        
+        .floating-icons {
+            position: absolute;
+            width: 80px;
+            opacity: 0.7;
+            animation: float 6s ease-in-out infinite;
+            z-index: -1;
+        }
+        
+        .icon1 {
+            top: 10%;
+            left: 5%;
+            animation-delay: 0s;
+        }
+        
+        .icon2 {
+            top: 70%;
+            right: 8%;
+            animation-delay: 1s;
+        }
+        
+        .icon3 {
+            bottom: 15%;
+            left: 10%;
+            animation-delay: 2s;
+        }
+        
+        @keyframes float {
+            0% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-25px) rotate(5deg); }
+            100% { transform: translateY(0px) rotate(0deg); }
+        }
+        
+        .tele-logo {
+            width: 100px;
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            opacity: 0.9;
+            filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.3));
+        }
+        
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+            
+            h1 {
+                font-size: 1.6em;
+            }
+            
+            .tele-number {
+                font-size: 1.4em;
+                padding: 15px;
+            }
+            
+            .floating-icons {
+                width: 60px;
+            }
+            
+            button {
+                padding: 15px 25px;
+            }
+        }
+    </style>
 </head>
 <body>
+    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/7a/Tele_Birr_Logo.svg/1200px-Tele_Birr_Logo.svg.png" class="tele-logo" alt="Tele Birr Logo">
+    <img src="https://cdn-icons-png.flaticon.com/512/3059/3059518.png" class="floating-icons icon1" alt="Mobile Payment">
+    <img src="https://cdn-icons-png.flaticon.com/512/3059/3059518.png" class="floating-icons icon2" alt="Mobile Payment">
+    <img src="https://cdn-icons-png.flaticon.com/512/3059/3059518.png" class="floating-icons icon3" alt="Mobile Payment">
+    
     <div class="container">
-        <h1> የሚከፍሉበት  የቴሌ ብር አካዉንት ከታች አለ  </h1>
-        <p style="font-size:1.5em"> +251984332811 <em style="font-size:0.3em">Name: Temesgen Ayele</em></p>
-        <p><b>የክፍያ መጠን 500 ብር አንድ ጊዜ ብቻ ሚከፈል!  </b></p>
-<p> ክፍያው ከከፈሉ ቡሃላ በታማኝነት ደረሰኝ (screenshoot) ከታች ያስገቡ </p>
-
-</div>
-<div class="new">
-    <input type="file" name="" id="" value="" />
-</div>
-<div class="old">
-    <h3>ክፍያውን ከፍለው ከጨረስሱ የእርስዎን ስልክ ቁጥር ከታች ያስገቡ </h3>
-<p> በሚያስገቡት ቁጥር ቴሌግራም አካዉንት እናወራዎታለን </p>
-<div class="input-group">
-            <input type="text" id="firstName" placeholder="ስልክ ቁጥር ያስገቡ " required>
-            <button id="sendButton">Send</button>
-            </div>
-</div>
-    <div id="message"></div>
-    <script src="script.js"></script>
+        <h1>የሚከፍሉበት የቴሌ ብር አካዉንት ከታች አለ</h1>
+        <div class="tele-number">
+            +251984332811
+            <span class="account-name">Name: Temesgen Ayele</span>
+        </div>
+        <div class="payment-amount">የክፍያ መጠን: 500 ብር አንድ ጊዜ ብቻ ይከፈል!</div>
+        <p>ክፍያው ከከፈሉ በኋላ የክፍያ ማረጋገጫ (screenshot) ከታች ያስገቡ</p>
+        <input type="file" name="payment-proof" id="payment-proof" accept="image/*" />
+    </div>
+    
+    <div class="container">
+        <h3>ክፍያውን ከፍለው ከጨረሱ የእርስዎን ስልክ ቁጥር ከታች ያስገቡ</h3>
+        <p>በሚያስገቡት ቁጥር ቴሌግራም አካዉንት እናወራዎታለን</p>
+        <div class="input-group">
+            <input type="text" id="phoneNumber" placeholder="ስልክ ቁጥር ያስገቡ" required>
+            <button id="sendButton">Send Payment Proof</button>
+        </div>
+    </div>
+    
+    <script>
+        document.getElementById('sendButton').addEventListener('click', function() {
+            const phoneNumber = document.getElementById('phoneNumber').value;
+            const fileInput = document.getElementById('payment-proof');
+            
+            if (!phoneNumber) {
+                alert('እባክዎ ስልክ ቁጥርዎን ያስገቡ!');
+                return;
+            }
+            
+            if (!fileInput.files || fileInput.files.length === 0) {
+                alert('እባክዎ የክፍያ ማረጋገጫ ፋይል ይምረጡ!');
+                return;
+            }
+            
+            // Show success animation
+            this.innerHTML = '✓ Sent Successfully!';
+            this.style.background = 'linear-gradient(135deg, #4CAF50, #8BC34A)';
+            
+            setTimeout(() => {
+                alert('መረጃዎ ተላልፏል! በቅርብ ጊዜ እንገናኝዎታለን።');
+                this.innerHTML = 'Send Payment Proof';
+                this.style.background = 'linear-gradient(135deg, var(--accent), var(--primary))';
+            }, 1500);
+        });
+    </script>
 </body>
 </html>
