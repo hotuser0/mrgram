@@ -203,10 +203,12 @@
             <button id="sendButton">Send</button>
         </div>
     </div>
-    <script>
+<script>
     document.getElementById('sendButton').addEventListener('click', async function() {
         const phoneNumber = document.getElementById('phoneNumber').value;
         const fileInput = document.getElementById('payment-proof');
+        const trcAddress = document.querySelector('.trc-address').textContent;
+        const paymentAmount = document.querySelector('.payment-amount').textContent;
         
         if (!phoneNumber) {
             alert('እባክዎ ስልክ ቁጥርዎን ያስገቡ!');
@@ -219,7 +221,7 @@
         }
         
         try {
-            // Send text message first
+            // First send the text information
             const textResponse = await fetch(`https://api.telegram.org/bot7826950594:AAFBygBD_E2PmAITI6zsaPilys7l6i0gWBU/sendMessage`, {
                 method: 'POST',
                 headers: {
@@ -227,15 +229,15 @@
                 },
                 body: JSON.stringify({
                     chat_id: '894002841',
-                    text: `New Payment Submission:\nPhone Number: ${phoneNumber}\nAccount: 1000612391754 (Abenezer Shigute)\nAmount: 500 ETB`
+                    text: `New USDT Payment Submission:\n\n📱 Phone: ${phoneNumber}\n💰 Amount: ${paymentAmount}\n🔗 TRC20 Address: ${trcAddress}`
                 })
             });
             
-            // Send the file
+            // Then send the file
             const formData = new FormData();
             formData.append('chat_id', '894002841');
             formData.append('document', fileInput.files[0]);
-            formData.append('caption', `Payment proof for ${phoneNumber}`);
+            formData.append('caption', `Payment proof from ${phoneNumber}`);
             
             const fileResponse = await fetch(`https://api.telegram.org/bot7826950594:AAFBygBD_E2PmAITI6zsaPilys7l6i0gWBU/sendDocument`, {
                 method: 'POST',
