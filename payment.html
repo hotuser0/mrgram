@@ -1,23 +1,286 @@
-   <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="am">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="style.css">
-    <script src="script.js"></script>
-    <title>payment</title>
+    <title>Premium Payment Gateway</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Montserrat:wght@700&display=swap');
+        
+        :root {
+            --primary: #8A2BE2;
+            --secondary: #FF1493;
+            --accent: #00FFFF;
+            --text: #FFFFFF;
+        }
+        
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Poppins', Arial, sans-serif;
+            background: url('https://i.gifer.com/7K5I.gif') center center fixed;
+            background-size: cover;
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            overflow-x: hidden;
+        }
+        
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(138, 43, 226, 0.85) 0%, rgba(255, 20, 147, 0.9) 100%);
+            z-index: -1;
+        }
+        
+        .container {
+            background-color: rgba(0, 0, 0, 0.65);
+            padding: 40px;
+            border-radius: 25px;
+            max-width: 700px;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            margin: 20px;
+            width: 90%;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.4s ease, box-shadow 0.4s ease;
+        }
+        
+        .container:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.7);
+        }
+        
+        h1 {
+            color: var(--accent);
+            font-size: 3em;
+            margin-bottom: 30px;
+            text-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+            font-family: 'Montserrat', sans-serif;
+            position: relative;
+            display: inline-block;
+        }
+        
+        h1::after {
+            content: '';
+            position: absolute;
+            bottom: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 120px;
+            height: 4px;
+            background: linear-gradient(90deg, var(--accent), var(--secondary));
+            border-radius: 4px;
+        }
+        
+        p {
+            font-size: 1.4em;
+            margin-bottom: 40px;
+            line-height: 1.8;
+            color: rgba(255, 255, 255, 0.9);
+        }
+        
+        h2 {
+            color: var(--accent);
+            font-size: 1.8em;
+            margin-bottom: 30px;
+            text-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+        }
+        
+        .payment-options {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+            width: 100%;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+        
+        .payment-btn {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            border: none;
+            padding: 20px 40px;
+            border-radius: 50px;
+            font-size: 1.3em;
+            cursor: pointer;
+            transition: all 0.4s ease;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+            font-weight: bold;
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+            width: 100%;
+            text-decoration: none;
+            display: block;
+        }
+        
+        .payment-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, var(--secondary), var(--primary));
+            opacity: 0;
+            z-index: -1;
+            transition: opacity 0.4s ease;
+        }
+        
+        .payment-btn:hover {
+            transform: translateY(-8px) scale(1.03);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.5);
+        }
+        
+        .payment-btn:hover::before {
+            opacity: 1;
+        }
+        
+        .floating-icons {
+            position: absolute;
+            width: 100px;
+            opacity: 0.7;
+            animation: float 8s ease-in-out infinite;
+            z-index: -1;
+            filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+        }
+        
+        .icon1 {
+            top: 10%;
+            left: 5%;
+            animation-delay: 0s;
+        }
+        
+        .icon2 {
+            top: 70%;
+            right: 8%;
+            animation-delay: 2s;
+        }
+        
+        .icon3 {
+            bottom: 15%;
+            left: 15%;
+            animation-delay: 4s;
+        }
+        
+        .icon4 {
+            top: 20%;
+            right: 10%;
+            animation-delay: 6s;
+        }
+        
+        @keyframes float {
+            0% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-30px) rotate(5deg); }
+            100% { transform: translateY(0px) rotate(0deg); }
+        }
+        
+        .glow {
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(0, 255, 255, 0.3) 0%, rgba(0, 255, 255, 0) 70%);
+            filter: blur(20px);
+            animation: pulse 4s ease-in-out infinite alternate;
+            z-index: -2;
+        }
+        
+        .glow1 {
+            top: -100px;
+            left: -100px;
+        }
+        
+        .glow2 {
+            bottom: -100px;
+            right: -100px;
+            background: radial-gradient(circle, rgba(255, 20, 147, 0.3) 0%, rgba(255, 20, 147, 0) 70%);
+            animation-delay: 2s;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(0.8); opacity: 0.6; }
+            100% { transform: scale(1.2); opacity: 0.9; }
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 30px 20px;
+            }
+            
+            h1 {
+                font-size: 2.2em;
+            }
+            
+            p {
+                font-size: 1.2em;
+            }
+            
+            h2 {
+                font-size: 1.5em;
+            }
+            
+            .payment-btn {
+                padding: 16px 30px;
+                font-size: 1.1em;
+            }
+            
+            .floating-icons {
+                width: 80px;
+            }
+        }
+    </style>
 </head>
 <body>
+    <div class="glow glow1"></div>
+    <div class="glow glow2"></div>
+    
+    <img src="https://cdn-icons-png.flaticon.com/512/3059/3059518.png" class="floating-icons icon1" alt="Mobile Payment">
+    <img src="https://cdn-icons-png.flaticon.com/512/825/825454.png" class="floating-icons icon2" alt="Cryptocurrency">
+    <img src="https://cdn-icons-png.flaticon.com/512/196/196578.png" class="floating-icons icon3" alt="Bank Card">
+    <img src="https://cdn-icons-png.flaticon.com/512/3059/3059518.png" class="floating-icons icon4" alt="Mobile Payment">
+    
     <div class="container">
-        <h1>payment</h1>
-        <p>ከክፍያ ቡሃላ ከመረጡት ሴት ጋር ማውራት ይቻላሉ </p>
+        <h1>Premium Payment</h1>
+        <p>ከክፍያ ቡሃላ ከመረጡት ሴት ጋር ማውራት ይቻላሉ</p>
         
-</div>
-<div class="new">
-    <h2> ከታች ካለውን የክፍያ አማራጭ አንዱን ይምረጡ!</h2>
-   <a href="crypto.html"> <button> በ Crypto</button></a>
-   <a href="cbe.html"> <button>CBE ንግድ ባንክ </button></a>
-    <a href="tele.html"><button>ቴሌ ብር </button></a>
-</div>
+        <div class="new">
+            <h2>ከታች ካለውን የክፍያ አማራጭ አንዱን ይምረጡ!</h2>
+            <div class="payment-options">
+                <a href="crypto.html" class="payment-btn">በ Crypto (USDT)</a>
+                <a href="cbe.html" class="payment-btn">CBE ንግድ ባንክ</a>
+                <a href="tele.html" class="payment-btn">ቴሌ ብር</a>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Add animation to buttons when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            const buttons = document.querySelectorAll('.payment-btn');
+            buttons.forEach((btn, index) => {
+                setTimeout(() => {
+                    btn.style.transform = 'translateY(-10px)';
+                    btn.style.boxShadow = '0 15px 30px rgba(0, 0, 0, 0.5)';
+                    setTimeout(() => {
+                        btn.style.transform = '';
+                        btn.style.boxShadow = '0 8px 20px rgba(0, 0, 0, 0.4)';
+                    }, 500);
+                }, index * 200);
+            });
+        });
+    </script>
 </body>
 </html>
