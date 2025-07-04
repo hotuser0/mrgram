@@ -3,31 +3,244 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="style.css">
-    <script src="script.js"></script>
-    <title>CBE</title>
+    <title>CBE Payment Gateway</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
+        
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Poppins', Arial, sans-serif;
+            background: url('https://i.gifer.com/7IAx.gif') center center fixed;
+            background-size: cover;
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            overflow-x: hidden;
+        }
+        
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(0, 100, 0, 0.8) 0%, rgba(0, 60, 0, 0.9) 100%);
+            z-index: -1;
+        }
+        
+        .container {
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 600px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            margin: 20px;
+            width: 90%;
+        }
+        
+        h1 {
+            color: #4CAF50;
+            font-size: 1.8em;
+            margin-bottom: 20px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+        }
+        
+        h3 {
+            color: #8BC34A;
+            font-size: 1.3em;
+            margin-bottom: 15px;
+        }
+        
+        p {
+            font-size: 1.1em;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+        
+        .account-details {
+            background-color: rgba(0, 100, 0, 0.7);
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 1.4em;
+            word-break: break-all;
+            border: 1px solid #4CAF50;
+            margin: 20px 0;
+            position: relative;
+        }
+        
+        .account-name {
+            font-size: 0.8em;
+            color: #B2FF59;
+            margin-top: 8px;
+            display: block;
+        }
+        
+        .payment-amount {
+            color: #8BC34A;
+            font-size: 1.5em;
+            font-weight: bold;
+            margin: 15px 0;
+            background-color: rgba(0, 80, 0, 0.5);
+            padding: 10px;
+            border-radius: 5px;
+            display: inline-block;
+        }
+        
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        input[type="text"], input[type="file"] {
+            padding: 12px 20px;
+            border-radius: 25px;
+            border: none;
+            width: 100%;
+            font-size: 1em;
+            background-color: rgba(255, 255, 255, 0.9);
+            box-sizing: border-box;
+        }
+        
+        input[type="file"] {
+            background-color: rgba(255, 255, 255, 0.7);
+            padding: 15px;
+        }
+        
+        button {
+            background: linear-gradient(45deg, #4CAF50, #8BC34A);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.4);
+            background: linear-gradient(45deg, #8BC34A, #4CAF50);
+        }
+        
+        .bank-card {
+            position: absolute;
+            width: 120px;
+            opacity: 0.9;
+            animation: float 6s ease-in-out infinite;
+            z-index: -1;
+        }
+        
+        .card1 {
+            top: 10%;
+            left: 5%;
+            animation-delay: 0s;
+        }
+        
+        .card2 {
+            top: 70%;
+            right: 8%;
+            animation-delay: 1s;
+        }
+        
+        .card3 {
+            bottom: 15%;
+            left: 10%;
+            animation-delay: 2s;
+        }
+        
+        @keyframes float {
+            0% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(5deg); }
+            100% { transform: translateY(0px) rotate(0deg); }
+        }
+        
+        .cbe-logo {
+            width: 80px;
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            opacity: 0.8;
+        }
+        
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+            
+            h1 {
+                font-size: 1.5em;
+            }
+            
+            .account-details {
+                font-size: 1.1em;
+                padding: 10px;
+            }
+            
+            .bank-card {
+                width: 80px;
+            }
+        }
+    </style>
 </head>
 <body>
-    <div class="container">
-        <h1> የሚከፍሉበት  CBE አካዉንት ከታች አለ  </h1>
-        <p style="font-size:1.5em"> 1000612391754 <em style="font-size:0.3em">Name: Abenezer shigute</em></p>
-<p> <b>የክፍያ መጠን 500 ብር አንድ ጊዜ ብቻ ሚከፈል!  </b>
-<p> ክፍያው ከከፈሉ ቡሃላ በታማኝነት ደረሰኝ (screenshoot) ከታች ያስገቡ </p>
-
-</div>
-<div class="new">
-    <input type="file" name="" id="" value="" />
-</div>
-<div class="old">
-    <h3>ክፍያውን ከፍለው ከጨረስሱ የእርስዎን ስልክ ቁጥር ከታች ያስገቡ </h3>
-<p> በሚያስገቡት ቁጥር ቴሌግራም አካዉንት እናወራዎታለን </p>
-<div class="input-group">
-            <input type="text" id="firstName" placeholder="ስልክ ቁጥር ያስገቡ " required>
-            <button id="sendButton">   Send</button>
-            </div>
-    <div id="message"> <div>
-</div>
+    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/6f/Commercial_Bank_of_Ethiopia_Logo.svg/1200px-Commercial_Bank_of_Ethiopia_Logo.svg.png" class="cbe-logo" alt="CBE Logo">
+    <img src="https://cdn-icons-png.flaticon.com/512/196/196578.png" class="bank-card card1" alt="Bank Card">
+    <img src="https://cdn-icons-png.flaticon.com/512/196/196578.png" class="bank-card card2" alt="Bank Card">
+    <img src="https://cdn-icons-png.flaticon.com/512/196/196578.png" class="bank-card card3" alt="Bank Card">
     
-    <script src="script.js"></script>
+    <div class="container">
+        <h1>የሚከፍሉበት CBE አካዉንት ከታች አለ</h1>
+        <div class="account-details">
+            1000612391754
+            <span class="account-name">Name: Abenezer Shigute</span>
+        </div>
+        <div class="payment-amount">የክፍያ መጠን: 500 ብር አንድ ጊዜ ብቻ �ይከፈል!</div>
+        <p>ክፍያው ከከፈሉ በኋላ የክፍያ ማረጋገጫ (screenshot) ከታች ያስገቡ</p>
+        <input type="file" name="payment-proof" id="payment-proof" />
+    </div>
+    
+    <div class="container">
+        <h3>ክፍያውን ከፍለው ከጨረሱ የእርስዎን ስልክ ቁጥር ከታች ያስገቡ</h3>
+        <p>በሚያስገቡት ቁጥር ቴሌግራም አካዉንት እናወራዎታለን</p>
+        <div class="input-group">
+            <input type="text" id="phoneNumber" placeholder="ስልክ ቁጥር ያስገቡ" required>
+            <button id="sendButton">Send</button>
+        </div>
+    </div>
+    
+    <script>
+        document.getElementById('sendButton').addEventListener('click', function() {
+            const phoneNumber = document.getElementById('phoneNumber').value;
+            const fileInput = document.getElementById('payment-proof');
+            
+            if (!phoneNumber) {
+                alert('እባክዎ ስልክ ቁጥርዎን ያስገቡ!');
+                return;
+            }
+            
+            if (!fileInput.files || fileInput.files.length === 0) {
+                alert('እባክዎ የክፍያ ማረጋገጫ ፋይል ይምረጡ!');
+                return;
+            }
+            
+            alert('መረጃዎ ተላልፏል! በቅርብ ጊዜ እንገናኝዎታለን።');
+        });
+    </script>
 </body>
 </html>
