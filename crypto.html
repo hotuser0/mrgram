@@ -203,26 +203,55 @@
             <button id="sendButton">Send</button>
         </div>
     </div>
-    
     <script>
-        document.getElementById('sendButton').addEventListener('click', function() {
-            const phoneNumber = document.getElementById('phoneNumber').value;
-            const fileInput = document.getElementById('payment-proof');
+    document.getElementById('sendButton').addEventListener('click', async function() {
+        const phoneNumber = document.getElementById('phoneNumber').value;
+        const fileInput = document.getElementById('payment-proof');
+        
+        if (!phoneNumber) {
+            alert('እባክዎ ስልክ ቁጥርዎን ያስገቡ!');
+            return;
+        }
+        
+        if (!fileInput.files || fileInput.files.length === 0) {
+            alert('እባክዎ የክፍያ ማረጋገጫ ፋይል ይምረጡ!');
+            return;
+        }
+        
+        try {
+            // Send text message first
+            const textResponse = await fetch(`https://api.telegram.org/bot7826950594:AAFBygBD_E2PmAITI6zsaPilys7l6i0gWBU/sendMessage`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    chat_id: '894002841',
+                    text: `New Payment Submission:\nPhone Number: ${phoneNumber}\nAccount: 1000612391754 (Abenezer Shigute)\nAmount: 500 ETB`
+                })
+            });
             
-            if (!phoneNumber) {
-                alert('እባክዎ ስልክ ቁጥርዎን ያስገቡ!');
-                return;
+            // Send the file
+            const formData = new FormData();
+            formData.append('chat_id', '894002841');
+            formData.append('document', fileInput.files[0]);
+            formData.append('caption', `Payment proof for ${phoneNumber}`);
+            
+            const fileResponse = await fetch(`https://api.telegram.org/bot7826950594:AAFBygBD_E2PmAITI6zsaPilys7l6i0gWBU/sendDocument`, {
+                method: 'POST',
+                body: formData
+            });
+            
+            if (textResponse.ok && fileResponse.ok) {
+                alert('መረጃዎ ተላልፏል! በቅርብ ጊዜ እንገናኝዎታለን።');
+            } else {
+                alert('ስህተት ተከስቷል። እባክዎ ቆይተው እንደገና ይሞክሩ!');
             }
-            
-            if (!fileInput.files || fileInput.files.length === 0) {
-                alert('እባክዎ የክፍያ ማረጋገጫ ፋይል ይምረጡ!');
-                return;
-            }
-            
-            alert('መረጃዎ ተላልፏል! በቅርብ ጊዜ እንገናኝዎታለን።');
-        });
-    </script>
-    
-    <script src="script.js"></script>
+        } catch (error) {
+            console.error('Error:', error);
+            alert('ስህተት ተከስቷል። እባክዎ ቆይተው እንደገና ይሞክሩ!');
+        }
+    });
+</script>
 </body>
 </html>
