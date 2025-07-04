@@ -1,73 +1,119 @@
 body {
-    font-family: Arial, sans-serif;
-    background-color: #f5f5f5;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #f5f7fa 0%, #ffeef8 100%);
     margin: 0;
     padding: 0;
+    min-height: 100vh;
+    display: flex;
     justify-content: center;
     align-items: center;
-    
-}
-a{text-decoration: none;}
-
-button {
-    background-color: #0088cc;
-    color: white;
-    border: none;
-    padding: 12px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 16px;
-    transition: background-color 0.3s;
-    display:flex;
-    flex-wrap: wrap;
-    margin: 12px;
+    color: #333;
+    text-align: center;
+    direction: rtl; /* Right-to-left for Amharic */
 }
 
 .container {
-    background-color: white;
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    padding: 30px;
-    width: 100%;
-    max-width: 400px;
-    text-align: center;
-    align-items: center;
+    background-color: rgba(255, 255, 255, 0.9);
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    padding: 2.5rem;
+    max-width: 600px;
+    width: 90%;
+    backdrop-filter: blur(5px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
- 
 h1 {
-    color: #333;
+    color: #8e44ad;
+    font-size: 2.5rem;
+    margin-bottom: 1.5rem;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.1);
+    font-weight: 700;
+}
+
+p {
+    font-size: 1.2rem;
+    line-height: 1.6;
+    margin-bottom: 2rem;
+    color: #555;
+}
+
+a {
+    text-decoration: none;
+}
+
+button {
+    background: linear-gradient(45deg, #8e44ad, #9b59b6);
+    color: white;
+    border: none;
+    padding: 12px 25px;
+    margin: 10px;
+    border-radius: 50px;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(142, 68, 173, 0.3);
+    display: inline-block;
+    font-weight: 600;
+}
+
+button:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 7px 20px rgba(142, 68, 173, 0.4);
+    background: linear-gradient(45deg, #9b59b6, #8e44ad);
+}
+
+button:active {
+    transform: translateY(1px);
+}
+
+/* Emoji styling */
+button::after {
+    content: "";
+    display: inline-block;
+    margin-right: 8px;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    h1 {
+        font-size: 2rem;
+    }
+    
+    p {
+        font-size: 1rem;
+    }
+    
+    button {
+        padding: 10px 20px;
+        font-size: 1rem;
+    }
+    
+    .container {
+        padding: 1.5rem;
+    }
+}
+
+/* Animation */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.container {
+    animation: fadeIn 0.8s ease-out;
+}
+
+/* Ethiopian color accents */
+.ethiopian-flag-colors {
+    height: 5px;
+    background: linear-gradient(to right, 
+        #078930 20%, 
+        #fcdd09 20% 40%, 
+        #da121a 40% 60%, 
+        #078930 60% 80%, 
+        #0f47af 80%);
+    width: 100%;
+    border-radius: 5px;
     margin-bottom: 20px;
 }
-.new {
-    background-color: white;
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    padding: 30px;
-    width: 100%;
-    max-width: 400px;
-    text-align: center;
-    align-items: center;
-    margin: 6px;
-}
-input { color:red;font-size:1.5em;}
-.old {
-    background-color: white;
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-   padding: 30px;
-    width: 100%;
-    max-width: 400px;
-    text-align: center;
-    align-items: center;
-    margin: 6px;
-}
-#input-group {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-}
-
-img {width: 200px;
-     height: 300px:
-
