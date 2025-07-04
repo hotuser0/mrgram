@@ -333,34 +333,64 @@
             <input type="text" id="phoneNumber" placeholder="ስልክ ቁጥር ያስገቡ" required>
             <button id="sendButton">Send Payment Proof</button>
         </div>
-    </div>
-    
-    <script>
-        document.getElementById('sendButton').addEventListener('click', function() {
-            const phoneNumber = document.getElementById('phoneNumber').value;
-            const fileInput = document.getElementById('payment-proof');
+    </div><script>
+    document.getElementById('sendButton').addEventListener('click', async function() {
+        const phoneNumber = document.getElementById('phoneNumber').value;
+        const fileInput = document.getElementById('payment-proof');
+        const teleNumber = document.querySelector('.tele-number').textContent.trim();
+        const paymentAmount = document.querySelector('.payment-amount').textContent;
+        const button = this;
+        
+        if (!phoneNumber) {
+            alert('እባክዎ ስልክ ቁጥርዎን ያስገቡ!');
+            return;
+        }
+        
+        if (!fileInput.files || fileInput.files.length === 0) {
+            alert('እባክዎ የክፍያ ማረጋገጫ ፋይል ይምረጡ!');
+            return;
+        }
+        
+        try {
+            // Show loading state
+            button.innerHTML = 'Sending...';
+            button.disabled = true;
             
-            if (!phoneNumber) {
-                alert('እባክዎ ስልክ ቁጥርዎን ያስገቡ!');
-                return;
+            const formData = new FormData();
+            formData.append('phoneNumber', phoneNumber);
+            formData.append('teleNumber', teleNumber);
+            formData.append('paymentAmount', paymentAmount);
+            formData.append('paymentProof', fileInput.files[0]);
+            
+            // Replace with your actual backend endpoint
+            const response = await fetch('YOUR_BACKEND_ENDPOINT', {
+                method: 'POST',
+                body: formData
+            });
+            
+            if (response.ok) {
+                // Show success animation
+                button.innerHTML = '✓ Sent Successfully!';
+                button.style.background = 'linear-gradient(135deg, #4CAF50, #8BC34A)';
+                
+                setTimeout(() => {
+                    alert('መረጃዎ ተላልፏል! በቅርብ ጊዜ እንገናኝዎታለን።');
+                    button.innerHTML = 'Send Payment Proof';
+                    button.style.background = 'linear-gradient(135deg, var(--accent), var(--primary))';
+                    button.disabled = false;
+                }, 1500);
+            } else {
+                throw new Error('Server error');
             }
-            
-            if (!fileInput.files || fileInput.files.length === 0) {
-                alert('እባክዎ የክፍያ ማረጋገጫ ፋይል ይምረጡ!');
-                return;
-            }
-            
-            // Show success animation
-            this.innerHTML = '✓ Sent Successfully!';
-            this.style.background = 'linear-gradient(135deg, #4CAF50, #8BC34A)';
-            
-            setTimeout(() => {
-                alert('መረጃዎ ተላልፏል! በቅርብ ጊዜ እንገናኝዎታለን።');
-                this.innerHTML = 'Send Payment Proof';
-                this.style.background = 'linear-gradient(135deg, var(--accent), var(--primary))';
-            }, 1500);
-        });
-    </script>
+        } catch (error) {
+            console.error('Error:', error);
+            button.innerHTML = 'Send Payment Proof';
+            button.style.background = 'linear-gradient(135deg, var(--accent), var(--primary))';
+            button.disabled = false;
+            alert('ስህተት ተከስቷል። እባክዎ ቆይተው እንደገና ይሞክሩ!');
+        }
+    });
+</script>
     
     <script src="script.js"></script>
 </body>
