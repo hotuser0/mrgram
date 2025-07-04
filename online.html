@@ -1,26 +1,169 @@
-    <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="am">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="style.css">
-    <script src="script.js"></script>
-<title> የሴት ምርጫ</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <title>የሴት ምርጫ - Online ዘና</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial', sans-serif;
+        }
+        
+        body {
+            background: url('https://i.gifer.com/7VA.gif') center/cover no-repeat fixed;
+            color: #fff;
+            min-height: 100vh;
+            position: relative;
+        }
+        
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: -1;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            z-index: 1;
+            position: relative;
+        }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 1.5rem;
+            font-size: 2.5rem;
+            color: #ff6b9d;
+            text-shadow: 0 0 10px rgba(255, 107, 157, 0.5);
+        }
+        
+        p {
+            text-align: center;
+            margin-bottom: 2rem;
+            font-size: 1.2rem;
+            color: #f8f8f8;
+        }
+        
+        ol {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1.5rem;
+            list-style: none;
+        }
+        
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+        
+        li {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        li:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4);
+        }
+        
+        img {
+            width: 100%;
+            height: 250px;
+            object-fit: cover;
+            display: block;
+            transition: transform 0.3s ease;
+        }
+        
+        li:hover img {
+            transform: scale(1.05);
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 3rem;
+            padding: 1rem;
+            color: #ccc;
+        }
+        
+        @media (max-width: 768px) {
+            ol {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            h1 {
+                font-size: 1.8rem;
+            }
+        }
+    </style>
 </head>
 <body>
     <div class="container">
-    <h1>Online በኦንላይን ዘና ለማለት መርጠውዋል  </h1>
-    <p>የምትፈልጉትን ፎቶ የምረጡ  </p>
-<ol>
-    <a href="payment.html">
-    <li> <img src="first.jpg" alt="rosi"> </li>
-    <li> <img src="second.jpg" alt="rosi"> </li>
-   <li> <img src="threed.jpg" alt="rosi"> </li>
-<li> <img src="forth.jpg" alt="rosi"> </li>
-
-<li> <img src="fifth.jpg" alt="sweety"></li>
-</a>
-</ol>
-</div>
+        <h1><i class="fas fa-heart"></i> Online በኦንላይን ዘና ለማለት መርጠውዋል</h1>
+        <p>የምትፈልጉትን ፎቶ የምረጡ</p>
+        
+        <ol>
+            <a href="payment.html">
+                <li>
+                    <img src="first.jpg" alt="rosi">
+                    <div class="overlay">Select Me</div>
+                </li>
+            </a>
+            <a href="payment.html">
+                <li>
+                    <img src="second.jpg" alt="rosi">
+                    <div class="overlay">Select Me</div>
+                </li>
+            </a>
+            <a href="payment.html">
+                <li>
+                    <img src="threed.jpg" alt="rosi">
+                    <div class="overlay">Select Me</div>
+                </li>
+            </a>
+            <a href="payment.html">
+                <li>
+                    <img src="forth.jpg" alt="rosi">
+                    <div class="overlay">Select Me</div>
+                </li>
+            </a>
+            <a href="payment.html">
+                <li>
+                    <img src="fifth.jpg" alt="sweety">
+                    <div class="overlay">Select Me</div>
+                </li>
+            </a>
+        </ol>
+        
+        <div class="footer">
+            <p>© 2023 የሴት ምርጫ - All Rights Reserved</p>
+        </div>
+    </div>
+    
+    <script>
+        // Add some interactive effects
+        document.querySelectorAll('li').forEach(item => {
+            item.addEventListener('mouseenter', function() {
+                this.style.background = 'rgba(255, 107, 157, 0.2)';
+            });
+            
+            item.addEventListener('mouseleave', function() {
+                this.style.background = 'rgba(255, 255, 255, 0.1)';
+            });
+        });
+    </script>
 </body>
 </html>
